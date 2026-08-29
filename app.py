@@ -5,7 +5,6 @@ import streamlit as st
 # 1. Sab se upar Page Configuration aur Shop Name rakhein:
 st.set_page_config(page_title="M. Farooq Electric Store", layout="wide")
 st.title("⚡ M. FAROOQ ELECTRIC STORE")
-st.subheader("Shop Management & Billing System")
 
 # 2. Iske neeche aap ka baaki saara Database aur Navigation ka code aayega...
 conn = sqlite3.connect("shop_inventory.db")
