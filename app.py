@@ -155,7 +155,7 @@ elif choice == "Sales History":
             label="Total Revenue", value=f"Rs. {df_sales['total_price'].sum()}"
         )
     else:
-        st.info("Abhi tak koi sale nahi hui.")	import streamlit as st
+        st.info("Abhi tak koi sale nahi hui.")
 
 st.set_page_config(page_title="My Electric Shop", layout="wide")
 st.title("⚡ M. FAROOQ ELECTRIC STORE")	
