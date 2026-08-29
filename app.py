@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS sales (
 conn.commit()
 
 # App Layout
-st.set_page_config(page_title="Shop Management System", layout="wide")
 st.title("🛍️ Shop Management & Billing System")
 
 menu = ["Billing (POS)", "Stock Management", "Company-wise Stock", "Sales History"]
@@ -161,6 +160,4 @@ elif choice == "Sales History":
         )
     else:
         st.info("Abhi tak koi sale nahi hui.")
-
-st.set_page_config(page_title="My Electric Shop", layout="wide")
-st.title("⚡ M. FAROOQ ELECTRIC STORE")	
+	
