@@ -27,4 +27,3 @@ def init_db():
 
     # 2. Sales Table
     cursor.execute('''
- …
