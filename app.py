@@ -164,8 +164,8 @@ with tabs[0]:
             st.markdown("---")
             st.markdown(f"""
             <div style="border:2px solid #333; padding:20px; border-radius:10px; background-color:#f9f9f9; color:#000;">
-                <h2 style="text-align:center; margin-bottom:0;">SHAH-RUKH ELECTRIC & TRADING CO.</h2>
-                <p style="text-align:center; margin-top:0;">Karachi, Pakistan | Ph: 0347-3395101</p>
+                <h2 style="text-align:center; margin-bottom:0;">M.FAROOQ ELECTRIC STORE .</h2>
+                <p style="text-align:center; margin-top:0;">Karachi, Pakistan | Ph: 0300-9294129</p>
                 <hr>
                 <p><b>Invoice No:</b> {inv_no} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Date:</b> {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
                 <p><b>Customer Name:</b> {cust_name}</p>
