@@ -109,8 +109,8 @@ st.set_page_config(page_title="Shop Inventory & Billing System", layout="wide")
 # =========================================================
 # TOP HEADER - SHOP NAME
 # =========================================================
-st.markdown("<h1 style='text-align: center; color: #1E88E5;'>⚡ SHAH-RUKH ELECTRIC & TRADING CO.</h1>", unsafe_allow_html=True)
-st.markdown("<h5 style='text-align: center; color: gray;'>Karachi, Pakistan | Contact: 0347-3395101</h5>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #1E88E5;'>⚡ M.FAROOQ ELECTRIC STORE .</h1>", unsafe_allow_html=True)
+st.markdown("<h5 style='text-align: center; color: gray;'>Karachi, Pakistan | Contact: 0300-9294129</h5>", unsafe_allow_html=True)
 st.divider()
 
 tabs = st.tabs(["📄 Generate Bill / Invoice", "🛒 Main Stock (Products)", "📥 Purchase (Kharid Khata)", "💰 Sales History"])
