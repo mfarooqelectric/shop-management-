@@ -274,6 +274,6 @@ elif choice == "Inventory":
     st.subheader("📦 Main Stock (Products)")
     stock_df = pd.read_sql("SELECT id, product_name, category, quantity, unit_price, cost_price FROM products", conn)
     st.dataframe(stock_df)
-git add requirements.txt
-git commit -m "Add reportlab to requirements.txt"
-git push
+python -m add requirements.txt
+python -m commit -m "Add reportlab to requirements.txt"
+python -m push
