@@ -273,8 +273,9 @@ elif choice == "Profit & Loss Dashboard":
 elif choice == "Inventory":
     st.subheader("📦 Main Stock (Products)")
     stock_df = pd.read_sql("SELECT id, product_name, category, quantity, unit_price, cost_price FROM products", conn)
-    st.dataframe(stock_df)
-    use_container_width=True)        
+        st.dataframe(df, use_container_width=True)  
 git add requirements.txt
 git commit -m "Add reportlab to requirements.txt"
+git push    git add app.py
+git commit -m "Fix unmatched parenthesis syntax error"
 git push
