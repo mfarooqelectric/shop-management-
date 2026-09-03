@@ -1,4 +1,10 @@
 import streamlit as st
+import pandas as pd
+from streamlit_gsheets import GSheetsConnection
+
+# Google Sheets Connection
+conn = st.connection("gsheets", type=GSheetsConnection)
+import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import datetime
