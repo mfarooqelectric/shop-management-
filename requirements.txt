@@ -1,3 +1,5 @@
 streamlit
 reportlab
 pandas
+st-file-connection
+gsheetsdb
