@@ -275,8 +275,4 @@ elif choice == "Inventory":
     stock_df = pd.read_sql("SELECT id, product_name, category, quantity, unit_price, cost_price FROM products", conn)
 def display_data():    
  st.dataframe(df, use_container_width=True)
-git add requirements.txt
-git commit -m "Add reportlab to requirements.txt"
-git push    git add app.py
-git commit -m "Fix unmatched parenthesis syntax error"
-git push
+
