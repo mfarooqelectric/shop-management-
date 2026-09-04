@@ -6,7 +6,7 @@ from reportlab.pdfgen import canvas
 import io
 
 # Built-in Streamlit Google Sheets Connection
-conn = st.connection("gsheets", type="gsheets")
+conn = st.connection("gsheets", type=FilesConnection)
 import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
