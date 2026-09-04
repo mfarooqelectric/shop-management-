@@ -4,7 +4,7 @@ from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
-from st_gsheets_connection import GSheetsConnection
+from streamlit_gsheets import GSheetsConnection
 
 # Google Sheets Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
