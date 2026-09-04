@@ -1,5 +1,14 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import io
+
+# Built-in Streamlit Google Sheets Connection
+conn = st.connection("gsheets", type="gsheets")
+import streamlit as st
+import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
