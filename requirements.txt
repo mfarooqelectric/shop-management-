@@ -3,3 +3,4 @@ reportlab
 pandas
 st-file-connection
 streamlit-gsheets
+st-gsheets-connection
