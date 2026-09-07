@@ -33,7 +33,7 @@ def save_sheet_data(worksheet_name, df):
     ws = conn._instance.worksheet(worksheet_name)
     ws.clear()
     ws.update([cleaned_df.columns.values.tolist()] + cleaned_df.values.tolist())
-        return df
+    return df
     except Exception:
     return pd.DataFrame(columns=default_cols)
 
