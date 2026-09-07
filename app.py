@@ -22,7 +22,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_sheet_data(worksheet_name, default_cols):
     """Google Sheet se data load karne ke liye helper function"""
-  def save_sheet_data(worksheet_name, df):
+def save_sheet_data(worksheet_name, df):
     cleaned_df = df.reset_index(drop=True).fillna("")
     try:
         conn.update(worksheet=worksheet_name, data=cleaned_df)
