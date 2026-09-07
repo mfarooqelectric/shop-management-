@@ -35,7 +35,7 @@ def save_sheet_data(worksheet_name, df):
     ws.update([cleaned_df.columns.values.tolist()] + cleaned_df.values.tolist())
         return df
     except Exception:
-        return pd.DataFrame(columns=default_cols)
+    return pd.DataFrame(columns=default_cols)
 
 def save_sheet_data(worksheet_name, df):
     """Google Sheet me data save karne ke liye helper function"""
