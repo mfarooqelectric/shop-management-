@@ -197,8 +197,7 @@ elif choice == "Supplier Management":
             
             # 1. Save Purchase
             purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
-           purchases_df = purchases_df.reset_index(drop=True).fillna("")
-           new_pur = pd.DataFrame([{
+            new_pur = pd.DataFrame([{
                 "id": len(purchases_df) + 1, "supplier_name": sup_name, "product_name": prod_name,
                 "quantity": qty, "purchase_price": cost_price, "total_amount": tot_amt,
                 "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
