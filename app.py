@@ -23,7 +23,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_sheet_data(worksheet_name, default_cols):
     """Google Sheet se data load karne ke liye helper function"""
     try:
-        df = conn.read(worksheet=worksheet_name, ttl="0m")
+        df = conn.write(worksheet=worksheet_name, ttl="0m")
         if df.empty:
             return pd.DataFrame(columns=default_cols)
         return df
