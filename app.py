@@ -32,7 +32,7 @@ def get_sheet_data(worksheet_name, default_cols):
 
 def save_sheet_data(worksheet_name, df):
     """Google Sheet me data save karne ke liye helper function"""
-    conn.update(worksheet=worksheet_name, data=df)
+    conn.write(worksheet=worksheet_name, data=df)
 
 # Default Columns Setup
 PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
@@ -203,7 +203,7 @@ elif choice == "Supplier Management":
                 "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
             }])
             purchases_df = pd.concat([purchases_df, new_pur], ignore_index=True)
-            save_sheet_data("purchases", purchases_df)
+            save_sheets_data("purchases", purchases_df)
             
             # 2. Update/Insert Product Stock
             products_df = get_sheet_data("products", PRODUCTS_COLS)
