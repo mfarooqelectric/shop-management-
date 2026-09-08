@@ -16,6 +16,8 @@ from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
+import gspread
+import streamlit as st
 
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
@@ -33,8 +35,15 @@ def get_sheet_data(worksheet_name, default_cols):
         return pd.DataFrame(columns=default_cols)
 
 def save_sheet_data(worksheet_name, df):
-    """Google Sheet me data save karne ke liye helper function"""
-    conn.update(worksheet=worksheet_name, data=df)
+    # Secrets se credentials lein
+    credentials = st.secrets["gcs_connections"]["gsheets"] # Ya jahan aapne keys rakhi hain
+    gc = gspread.service_account_from_dict(credentials)
+    
+    sh = gc.open("Your Google Sheet Name")
+    worksheet = sh.worksheet(worksheet_name)
+    
+    worksheet.clear()
+    worksheet.update([df.columns.values.tolist()] + df.values.tolist())
 
 # Default Columns Setup
 PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
