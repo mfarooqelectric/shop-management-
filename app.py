@@ -20,7 +20,7 @@ import io
 # ----------------------------------------------------
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-def get_sheet_data(worksheet_name, default_cols):
+def save_sheet_data(worksheet_name, default_cols):
     """Google Sheet se data load karne ke liye helper function"""
     try:
         df = conn.read(worksheet=worksheet_name, ttl="0m")
