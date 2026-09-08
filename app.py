@@ -21,7 +21,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_resource
 def get_gspread_client():
-    creds_dict = dict(st.secrets["gcp_service_account"])
+   creds_dict = json.loads(st.secrets["gcp_service_account"])
     # Handle both escaped double-slashes and single-escaped newlines
     if "private_key" in creds_dict:
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
