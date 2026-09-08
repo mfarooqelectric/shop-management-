@@ -27,8 +27,14 @@ creds_dict = dict(st.secrets["gcp_service_account"])
 # Private key me formatting fix karein
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
-# Sheet open karein
+creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+# Step 1: Connection banayein aur variable ko 'g_sheet' ka naam dein
+g_sheet = gspread.service_account_from_dict(creds_dict)
+
+# Step 2: Ab sheet open karein
 sheet = g_sheet.open("M.Farooq Electric Store").sheet1
+
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
 # ----------------------------------------------------
