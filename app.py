@@ -21,13 +21,28 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_resource
 def get_gspread_client():
-   creds_dict = st.secrets["gcp_service_account"]
-   if isinstance(creds_dict, str):
-    creds_dict = json.loads(creds_dict)
-    # Handle both escaped double-slashes and single-escaped newlines
-   if "private_key" in creds_dict:
-            creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-            return gspread.service_account_from_dict(creds_dict)
+    import json
+    from google.oauth2.service_account import Credentials
+    import gspread
+    import streamlit as st
+
+    creds_info = st.secrets["gcp_service_account"]
+    
+    if isinstance(creds_info, str):
+        creds_info = json.loads(creds_info)
+
+    # private_key me \n ko sahi karna
+    if "private_key" in creds_info:
+        creds_info["private_key"] = creds_info["private_key"].replace("\\n", "\n")
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
+    gc = gspread.authorize(creds)
+    return gc
 
 def get_sheet_data(worksheet_name, default_cols):
     try:
