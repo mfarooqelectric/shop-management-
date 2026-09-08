@@ -18,7 +18,15 @@ from reportlab.pdfgen import canvas
 import io
 import gspread
 import streamlit as st
+import gspread
+import streamlit as st
 
+# Secrets se directly load karein
+creds_dict = dict(st.secrets["gcp_service_account"])
+client = gspread.service_account_from_dict(creds_dict)
+
+# Sheet open karein
+sheet = client.open("M.Farooq Electric Store").products
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
 # ----------------------------------------------------
