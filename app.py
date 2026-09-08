@@ -5,6 +5,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
 from streamlit_gsheets import GSheetsConnection
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Google Sheets Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -266,3 +268,29 @@ elif choice == "Inventory":
     st.subheader("📦 Main Stock (Products)")
     stock_df = get_sheet_data("products", PRODUCTS_COLS)
     st.dataframe(stock_df, use_container_width=True)
+
+# Scopes define karein
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+# Credentials load karein (JSON file ka sahi path dein)
+creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+client = gspread.authorize(creds)
+
+# Sheet open karein (Name ya Key se)
+sheet = client.open("Your Google Sheet Name").sheet1
+
+# --- 1. DATA WRITE KARNA ---
+# Single Cell write
+sheet.update_acell('A1', 'Item Name')
+sheet.update_acell('B1', 'Quantity')
+
+# Row Append karna
+sheet.append_row(["Keyboard", 15])
+
+# --- 2. DATA READ KARNA ---
+# Tamam data read karna
+all_records = sheet.get_all_records()
+print(all_records)
