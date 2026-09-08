@@ -22,25 +22,25 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_sheet_data(worksheet_name, default_cols):
     """Google Sheet se data load karne ke liye helper function"""
-def save_sheet_data(worksheet_name, df):
-    """Google Sheet me data save karne ke liye helper function"""
-    cleaned_df = df.reset_index(drop=True).fillna("")
     try:
-        conn.update(worksheet=worksheet_name, data=cleaned_df)
+        df = conn.read(worksheet=worksheet_name, ttl="0m")
+        if df.empty:
+            return pd.DataFrame(columns=default_cols)
+        return df
     except Exception:
-        conn.update(data=cleaned_df)
-    
-    # Direct gspread worksheet update
-    ws = conn._instance.worksheet(worksheet_name)
-    ws.clear()
-    ws.update([cleaned_df.columns.values.tolist()] + cleaned_df.values.tolist())
-    return df
-    except Exception:
-    return pd.DataFrame(columns=default_cols)
+        return pd.DataFrame(columns=default_cols)
 
 def save_sheet_data(worksheet_name, df):
     """Google Sheet me data save karne ke liye helper function"""
-    conn.write(worksheet=worksheet_name, data=df)
+    cleaned_df = df.reset_index(drop=True).fillna("")
+    conn.update(worksheet=worksheet_name, data=cleaned_df)
+
+# Default Columns Setup
+PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
+SALES_COLS = ["id", "invoice_no", "customer_name", "product_name", "quantity", "unit_price", "cost_price", "total_amount", "paid_amount", "payment_status", "timestamp"]
+PURCHASES_COLS = ["id", "supplier_name", "product_name", "quantity", "purchase_price", "total_amount", "paid_amount", "payment_status", "purchase_date"]
+CUST_LEDGER_COLS = ["id", "customer_name", "invoice_no", "total_amount", "paid_amount", "balance", "date"]
+SUPP_LEDGER_COLS = ["id", "supplier_name", "bill_no", "total_amount", "paid_amount", "balance", "date"]
 
 # Default Columns Setup
 PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
