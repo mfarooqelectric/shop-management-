@@ -21,12 +21,17 @@ import streamlit as st
 import gspread
 import streamlit as st
 
-# Secrets se directly load karein
+# Secrets se dictionary lein
 creds_dict = dict(st.secrets["gcp_service_account"])
+
+# Private key me formatting fix karein
+creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+# Authorize karein
 client = gspread.service_account_from_dict(creds_dict)
 
 # Sheet open karein
-sheet = client.open("M.Farooq Electric Store").products
+sheet = client.open("M,Farooq Electric Store").sheet1
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
 # ----------------------------------------------------
