@@ -24,8 +24,12 @@ import json
 import gspread
 import streamlit as st
 
-# Line 28 par dict() ki jagah json.loads() use karein
-creds_dict = json.loads(st.secrets["gcp_service_account"])
+# Direct secrets se dictionary lein
+creds_dict = dict(st.secrets["gcp_service_account"])
+
+# Connection banayein aur sheet open karein
+g_sheet = gspread.service_account_from_dict(creds_dict)
+sheet = g_sheet.open("M.Farooq Electric Store").sheet1
 
 # Private key fix karein
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
