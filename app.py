@@ -211,7 +211,7 @@ elif choice == "Supplier Management":
                 "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
             }])
             purchases_df = pd.concat([purchases_df, new_pur], ignore_index=True)
-            save_sheet_data("purchases", purchases_df)
+        def save_sheet_data("purchases", purchases_df)
             
             # 2. Update/Insert Product Stock
             products_df = get_sheet_data("products", PRODUCTS_COLS)
