@@ -23,7 +23,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def get_gspread_client():
    creds_dict = json.loads(st.secrets["gcp_service_account"])
     # Handle both escaped double-slashes and single-escaped newlines
-    if "private_key" in creds_dict:
+        if "private_key" in creds_dict:
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
     return gspread.service_account_from_dict(creds_dict)
 
