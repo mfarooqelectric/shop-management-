@@ -28,7 +28,7 @@ creds_dict = dict(st.secrets["gcp_service_account"])
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
 # Sheet open karein
-sheet = connection.open("M.Farooq Electric Store").sheet1
+sheet = g_sheet.open("M.Farooq Electric Store").sheet1
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
 # ----------------------------------------------------
