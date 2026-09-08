@@ -24,10 +24,10 @@ import json
 import gspread
 import streamlit as st
 
-# Secrets se raw JSON parse karein
-creds_dict = dict(st.secrets["gcp_service_account"])
+# Line 28 par dict() ki jagah json.loads() use karein
+creds_dict = json.loads(st.secrets["gcp_service_account"])
 
-# Private key ki \n formatting fix karein
+# Private key fix karein
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 
 # Connection banayein
