@@ -24,7 +24,7 @@ def get_gspread_client():
     creds_dict = st.secrets["gcp_service_account"]
     if "private_key" in creds_dict:
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-    return gspread.service_account_from_dict(creds_dict
+    return gspread.service_account_from_dict(creds_dict)
 
     # private_key me \n ko sahi karna
     if "private_key" in creds_info:
