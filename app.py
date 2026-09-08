@@ -31,9 +31,14 @@ def save_sheet_data(worksheet_name, default_cols):
         return pd.DataFrame(columns=default_cols)
 
 def save_sheet_data(worksheet_name, df):
-    """Google Sheet me data save karne ke liye helper function"""
+    """Google Sheet me data save karne ke liye working helper function"""
     cleaned_df = df.reset_index(drop=True).fillna("")
-    conn.update(worksheet=worksheet_name, data=cleaned_df)
+    data_matrix = [cleaned_df.columns.tolist()] + cleaned_df.values.tolist()
+    
+    # Internal library error ko bypass karne ke liye direct worksheet update
+    ws = conn._instance.worksheet(worksheet_name)
+    ws.clear()
+    ws.update(data_matrix)
 
 # Default Columns Setup
 PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
@@ -211,7 +216,7 @@ elif choice == "Supplier Management":
                 "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
             }])
             purchases_df = pd.concat([purchases_df, new_pur], ignore_index=True)
-        def save_sheet_data("purchases", purchases_df)
+            save_sheet_data("purchases", purchases_df)
             
             # 2. Update/Insert Product Stock
             products_df = get_sheet_data("products", PRODUCTS_COLS)
