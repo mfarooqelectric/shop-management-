@@ -154,7 +154,7 @@ if choice == "Sales & Invoice":
     st.text(f"Invoice No: {inv_no}")
 
     products_df = get_sheet_data("products", PRODUCTS_COLS)
-    if not products_df.empty:
+  if not products_df.empty:
     products_df = clean_products_df(products_df)
     
     # Company filter
