@@ -85,7 +85,7 @@ def clean_products_df(df):
     return df
 
 # Default Columns Setup
-PRODUCTS_COLS = ["id", "product_name", "category", "godown", "quantity", "unit_price", "cost_price"]
+PRODUCTS_COLS = ["id", "product_name", "category", "company", "godown", "quantity", "unit_price", "cost_price"]
 SALES_COLS = ["id", "invoice_no", "customer_name", "product_name", "quantity", "unit_price", "cost_price", "total_amount", "paid_amount", "payment_status", "timestamp"]
 PURCHASES_COLS = ["id", "supplier_name", "product_name", "quantity", "purchase_price", "total_amount", "paid_amount", "payment_status", "purchase_date"]
 CUST_LEDGER_COLS = ["id", "customer_name", "invoice_no", "total_amount", "paid_amount", "balance", "date"]
@@ -229,6 +229,15 @@ elif choice == "Supplier Management":
 
     with st.form("supplier_form"):
         sup_name = st.text_input("Supplier Name")
+        
+        # COMPANY SELECTION
+        company_options = ["Sony", "Samsung", "LG", "Philips", "Panasonic", "Other"]
+        selected_company = st.selectbox("Select Company/Brand", company_options)
+        custom_company = st.text_input("Or Enter Custom Company Name (Optional)")
+        
+        # Agar custom likha ho to use karo, nahi to dropdown se
+        final_company = custom_company if custom_company.strip() else selected_company
+        
         prod_name = st.text_input("Product Name")
         
         # GODOWN SELECTION
@@ -243,8 +252,8 @@ elif choice == "Supplier Management":
         submit = st.form_submit_button("Record Purchase")
 
         if submit:
-            if not sup_name.strip() or not prod_name.strip():
-                st.error("Supplier Name aur Product Name zaroori hain.")
+            if not sup_name.strip() or not prod_name.strip() or not final_company.strip():
+                st.error("Supplier Name, Product Name, aur Company zaroori hain.")
             else:
                 tot_amt = qty * cost_price
                 status = "Paid" if paid_amt >= tot_amt else "Pending"
@@ -265,30 +274,32 @@ elif choice == "Supplier Management":
                 if not products_df.empty:
                     products_df = clean_products_df(products_df)
 
-                # Check if product already exists in this godown
+                # Check if product already exists with same company and godown
                 if not products_df.empty and prod_name in products_df['product_name'].values:
-                    # Check if exists in same godown
                     existing = products_df[(products_df['product_name'] == prod_name) & 
+                                          (products_df['company'] == final_company) &
                                           (products_df['godown'] == selected_godown)]
                     
                     if not existing.empty:
-                        # Existing product in same godown - add quantity
+                        # Existing product - add quantity
                         idx = existing.index[0]
                         products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
                         products_df.at[idx, 'unit_price'] = sell_price
                         products_df.at[idx, 'cost_price'] = cost_price
                     else:
-                        # Same product but different godown - create new entry
+                        # Same product but different company/godown - create new entry
                         new_prod = pd.DataFrame([{
                             "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
-                            "godown": selected_godown, "quantity": qty, "unit_price": sell_price, "cost_price": cost_price
+                            "company": final_company, "godown": selected_godown, "quantity": qty, 
+                            "unit_price": sell_price, "cost_price": cost_price
                         }])
                         products_df = pd.concat([products_df, new_prod], ignore_index=True)
                 else:
                     # New product - create entry
                     new_prod = pd.DataFrame([{
                         "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
-                        "godown": selected_godown, "quantity": qty, "unit_price": sell_price, "cost_price": cost_price
+                        "company": final_company, "godown": selected_godown, "quantity": qty, 
+                        "unit_price": sell_price, "cost_price": cost_price
                     }])
                     products_df = pd.concat([products_df, new_prod], ignore_index=True)
                 save_sheet_data("products", products_df)
@@ -303,7 +314,7 @@ elif choice == "Supplier Management":
                 supp_ledger_df = pd.concat([supp_ledger_df, new_supp_entry], ignore_index=True)
                 save_sheet_data("supplier_ledger", supp_ledger_df)
 
-                st.success(f"Stock Added to {selected_godown}!")
+                st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
