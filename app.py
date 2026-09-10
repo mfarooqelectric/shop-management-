@@ -155,8 +155,24 @@ if choice == "Sales & Invoice":
 
     products_df = get_sheet_data("products", PRODUCTS_COLS)
     if not products_df.empty:
-        products_df = clean_products_df(products_df)
-        prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
+    products_df = clean_products_df(products_df)
+    
+    # Company filter
+    all_companies = ["All"] + sorted(products_df['company'].unique().tolist())
+    selected_company = st.selectbox("Select Company", all_companies)
+    
+    if selected_company != "All":
+        products_df = products_df[products_df['company'] == selected_company]
+    
+    # Godown filter
+    all_godowns = ["All"] + sorted(products_df['godown'].unique().tolist())
+    selected_godown = st.selectbox("Select Godown to Buy From", all_godowns)
+    
+    if selected_godown != "All":
+        products_df = products_df[products_df['godown'] == selected_godown]
+    
+    # Baaki pehle wala code
+    prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
         selected_prod = products_df[products_df['product_name'] == prod_select].iloc[0]
         max_qty = int(selected_prod['quantity']) if int(selected_prod['quantity']) > 0 else 1
         qty = st.number_input("Quantity", min_value=1, max_value=max_qty, value=1)
