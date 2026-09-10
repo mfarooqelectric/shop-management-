@@ -172,7 +172,7 @@ if choice == "Sales & Invoice":
             products_df = products_df[products_df['godown'] == selected_godown]
     
     # Baaki pehle wala code
-    prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
+        prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
         selected_prod = products_df[products_df['product_name'] == prod_select].iloc[0]
         max_qty = int(selected_prod['quantity']) if int(selected_prod['quantity']) > 0 else 1
         qty = st.number_input("Quantity", min_value=1, max_value=max_qty, value=1)
