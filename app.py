@@ -247,7 +247,7 @@ elif choice == "Supplier Management":
         sup_name = st.text_input("Supplier Name")
         
         # COMPANY SELECTION
-        company_options = ["Sony", "Samsung", "LG", "Philips", "Panasonic", "Other"]
+        company_options = ["Hero", "EcM", "Hemil", "Clipsal", "Edilux", "Other"]
         selected_company = st.selectbox("Select Company/Brand", company_options)
         custom_company = st.text_input("Or Enter Custom Company Name (Optional)")
         
