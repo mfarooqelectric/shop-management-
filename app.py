@@ -131,7 +131,7 @@ def generate_pdf(invoice_no, customer_name, items_df, grand_total, paid_amount):
 # ----------------------------------------------------
 # 3. STREAMLIT UI & NAVIGATION
 # ----------------------------------------------------
-st.title("⚡ M. Farooq Electric Store System")
+st.title("⚡M. Farooq Electric Store⚡")
 
 menu = ["Sales & Invoice", "Customer Khata", "Supplier Management", "Profit & Loss Dashboard", "Inventory", "Purchase Return", "Sales Return"]
 choice = st.sidebar.selectbox("Navigation Menu", menu)
