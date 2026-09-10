@@ -21,51 +21,61 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_resource
 def get_gspread_client():
-    import copy
-    # .copy() karna lazmi hai warna TypeError ayega
+    """Gspread client"""
     creds_dict = dict(st.secrets["gcp_service_account"])
-    
-    if "private_key" in creds_dict:
-        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-    
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
     return gspread.service_account_from_dict(creds_dict)
 
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-
-    creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
-    gc = gspread.authorize(creds)
-    return gc
 
 def get_sheet_data(worksheet_name, default_cols):
+    """Direct gspread se data read karo - cache nahi"""
     try:
-        df = conn.read(worksheet=worksheet_name, ttl="0m")
+        gc = get_gspread_client()
+        sh = gc.open(SHEET_NAME)
+        worksheet = sh.worksheet(worksheet_name)
+        
+        # Sab data get karo
+        all_values = worksheet.get_all_values()
+        
+        if len(all_values) <= 1:  # Sirf headers ya khali
+            return pd.DataFrame(columns=default_cols)
+        
+        # Pehli row = headers, baki = data
+        df = pd.DataFrame(all_values[1:], columns=all_values[0])
         df = df.dropna(how="all")
+        
         if df.empty:
             return pd.DataFrame(columns=default_cols)
         return df
-    except Exception:
+        
+    except Exception as e:
+        print(f"Error: {e}")
         return pd.DataFrame(columns=default_cols)
 
+
 def save_sheet_data(worksheet_name, df):
-    """Google Sheet me data save karne ke liye helper function"""
+    """Google Sheet me data save/append karne ke liye"""
     gc = get_gspread_client()
     sh = gc.open(SHEET_NAME)
 
     try:
         worksheet = sh.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
+        # 5000 rows ka limit
         worksheet = sh.add_worksheet(title=worksheet_name, rows=5000, cols=max(len(df.columns), 1))
 
-    # NaN values ko empty string se replace karo
     df_clean = df.fillna("")
     
-    # Sirf nai rows append karo - clear mat karo!
-    for row in df_clean.values.tolist():
-        worksheet.append_row(row)
-    worksheet.update([df_clean.columns.values.tolist()] + df_clean.values.tolist())
+    # Pehle check karo - sheet empty to nahi?
+    all_data = worksheet.get_all_values()
+    
+    if len(all_data) == 0:
+        # Bilkul khali - headers + data
+        worksheet.update([df_clean.columns.values.tolist()] + df_clean.values.tolist())
+    else:
+        # Headers pehle se hain - sirf data append karo
+        for row in df_clean.values.tolist():
+            worksheet.append_row(row)
 
 def clean_products_df(df):
     df = df.copy()
