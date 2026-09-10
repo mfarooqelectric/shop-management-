@@ -50,15 +50,21 @@ def get_sheet_data(worksheet_name, default_cols):
         return pd.DataFrame(columns=default_cols)
 
 def save_sheet_data(worksheet_name, df):
+    """Google Sheet me data save karne ke liye helper function"""
     gc = get_gspread_client()
     sh = gc.open(SHEET_NAME)
 
     try:
         worksheet = sh.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
-        worksheet = sh.add_worksheet(title=worksheet_name, rows=1000, cols=max(len(df.columns), 1))
+        worksheet = sh.add_worksheet(title=worksheet_name, rows=5000, cols=max(len(df.columns), 1))
+
+    # NaN values ko empty string se replace karo
     df_clean = df.fillna("")
-    worksheet.clear()
+    
+    # Sirf nai rows append karo - clear mat karo!
+    for row in df_clean.values.tolist():
+        worksheet.append_row(row)
     worksheet.update([df_clean.columns.values.tolist()] + df_clean.values.tolist())
 
 def clean_products_df(df):
