@@ -85,7 +85,7 @@ def clean_products_df(df):
     return df
 
 # Default Columns Setup
-PRODUCTS_COLS = ["id", "product_name", "category", "quantity", "unit_price", "cost_price"]
+PRODUCTS_COLS = ["id", "product_name", "category", "godown", "quantity", "unit_price", "cost_price"]
 SALES_COLS = ["id", "invoice_no", "customer_name", "product_name", "quantity", "unit_price", "cost_price", "total_amount", "paid_amount", "payment_status", "timestamp"]
 PURCHASES_COLS = ["id", "supplier_name", "product_name", "quantity", "purchase_price", "total_amount", "paid_amount", "payment_status", "purchase_date"]
 CUST_LEDGER_COLS = ["id", "customer_name", "invoice_no", "total_amount", "paid_amount", "balance", "date"]
@@ -226,14 +226,22 @@ elif choice == "Customer Khata":
 # --- SUPPLIER MANAGEMENT ---
 elif choice == "Supplier Management":
     st.subheader("🚛 Supplier Management & Purchases")
+
     with st.form("supplier_form"):
         sup_name = st.text_input("Supplier Name")
         prod_name = st.text_input("Product Name")
+        
+        # GODOWN SELECTION
+        godown_options = ["Godown 1", "Godown 2", "Godown 3", "Godown 4", "Godown 5"]
+        selected_godown = st.selectbox("Select Godown", godown_options)
+        
         qty = st.number_input("Quantity Received", min_value=1, value=1)
         cost_price = st.number_input("Cost Price Per Item", min_value=0.0, value=100.0)
         sell_price = st.number_input("Selling Price Per Item", min_value=0.0, value=120.0)
         paid_amt = st.number_input("Amount Paid to Supplier", min_value=0.0, value=0.0)
+
         submit = st.form_submit_button("Record Purchase")
+
         if submit:
             if not sup_name.strip() or not prod_name.strip():
                 st.error("Supplier Name aur Product Name zaroori hain.")
@@ -241,7 +249,8 @@ elif choice == "Supplier Management":
                 tot_amt = qty * cost_price
                 status = "Paid" if paid_amt >= tot_amt else "Pending"
                 today_date = datetime.now().strftime('%Y-%m-%d')
-                # Save Purchase
+
+                # 1. Save Purchase
                 purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
                 new_pur = pd.DataFrame([{
                     "id": len(purchases_df) + 1, "supplier_name": sup_name, "product_name": prod_name,
@@ -250,23 +259,41 @@ elif choice == "Supplier Management":
                 }])
                 purchases_df = pd.concat([purchases_df, new_pur], ignore_index=True)
                 save_sheet_data("purchases", purchases_df)
-                # Update/Insert Product Stock
+
+                # 2. Update/Insert Product Stock
                 products_df = get_sheet_data("products", PRODUCTS_COLS)
                 if not products_df.empty:
                     products_df = clean_products_df(products_df)
+
+                # Check if product already exists in this godown
                 if not products_df.empty and prod_name in products_df['product_name'].values:
-                    idx = products_df[products_df['product_name'] == prod_name].index[0]
-                    products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
-                    products_df.at[idx, 'unit_price'] = sell_price
-                    products_df.at[idx, 'cost_price'] = cost_price
+                    # Check if exists in same godown
+                    existing = products_df[(products_df['product_name'] == prod_name) & 
+                                          (products_df['godown'] == selected_godown)]
+                    
+                    if not existing.empty:
+                        # Existing product in same godown - add quantity
+                        idx = existing.index[0]
+                        products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
+                        products_df.at[idx, 'unit_price'] = sell_price
+                        products_df.at[idx, 'cost_price'] = cost_price
+                    else:
+                        # Same product but different godown - create new entry
+                        new_prod = pd.DataFrame([{
+                            "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
+                            "godown": selected_godown, "quantity": qty, "unit_price": sell_price, "cost_price": cost_price
+                        }])
+                        products_df = pd.concat([products_df, new_prod], ignore_index=True)
                 else:
+                    # New product - create entry
                     new_prod = pd.DataFrame([{
                         "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
-                        "quantity": qty, "unit_price": sell_price, "cost_price": cost_price
+                        "godown": selected_godown, "quantity": qty, "unit_price": sell_price, "cost_price": cost_price
                     }])
                     products_df = pd.concat([products_df, new_prod], ignore_index=True)
                 save_sheet_data("products", products_df)
-                # Save Supplier Ledger
+
+                # 3. Save Supplier Ledger
                 supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
                 new_supp_entry = pd.DataFrame([{
                     "id": len(supp_ledger_df) + 1, "supplier_name": sup_name, "bill_no": "PUR-NEW",
@@ -275,7 +302,8 @@ elif choice == "Supplier Management":
                 }])
                 supp_ledger_df = pd.concat([supp_ledger_df, new_supp_entry], ignore_index=True)
                 save_sheet_data("supplier_ledger", supp_ledger_df)
-                st.success("Stock & Supplier Record Updated to Google Sheets!")
+
+                st.success(f"Stock Added to {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
@@ -300,12 +328,28 @@ elif choice == "Profit & Loss Dashboard":
 
 # --- INVENTORY ---
 elif choice == "Inventory":
-    st.subheader("📦 Main Stock (Products)")
+    st.subheader("📦 Main Stock (Products) - Godown Wise")
     stock_df = get_sheet_data("products", PRODUCTS_COLS)
+    
     if not stock_df.empty:
         stock_df = clean_products_df(stock_df)
-    st.dataframe(stock_df, use_container_width=True)
-
+        
+        # Godown filter
+        all_godowns = ["All"] + sorted(stock_df['godown'].unique().tolist())
+        selected_godown_filter = st.selectbox("Filter by Godown", all_godowns)
+        
+        if selected_godown_filter != "All":
+            stock_df = stock_df[stock_df['godown'] == selected_godown_filter]
+        
+        st.dataframe(stock_df, use_container_width=True)
+        
+        # Godown Summary
+        st.subheader("📊 Godown Summary")
+        summary = stock_df.groupby('godown').agg({'quantity': 'sum', 'product_name': 'count'}).reset_index()
+        summary.columns = ['Godown', 'Total Quantity', 'No. of Items']
+        st.table(summary)
+    else:
+        st.info("Koi Inventory Available nahi hai.")
 # --- PURCHASE RETURN ---
 elif choice == "Purchase Return":
     st.subheader("🔄 Purchase Return")
