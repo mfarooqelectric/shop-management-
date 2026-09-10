@@ -399,4 +399,4 @@ elif choice == "Sales Return":
         else:
             st.info("Sale ID not found.")
     else:
-        st.info("No sales records available.")
+        st.info("No sales records available.") 
