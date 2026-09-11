@@ -16,7 +16,6 @@ SHEET_NAME = "M.Farooq Electric Store"
 # ----------------------------------------------------
 # 1. GOOGLE SHEETS CONNECTION SETUP
 # ----------------------------------------------------
-# conn -> read ke liye (streamlit_gsheets)
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_resource
@@ -33,23 +32,16 @@ def get_sheet_data(worksheet_name, default_cols):
         gc = get_gspread_client()
         sh = gc.open(SHEET_NAME)
         worksheet = sh.worksheet(worksheet_name)
-        
-        # Sab data get karo
         all_values = worksheet.get_all_values()
-        
-        if len(all_values) <= 1:  # Sirf headers ya khali
+        if len(all_values) <= 1:
             return pd.DataFrame(columns=default_cols)
-        
-        # Pehli row = headers, baki = data
         df = pd.DataFrame(all_values[1:], columns=all_values[0])
         df = df.dropna(how="all")
-        
         if df.empty:
             return pd.DataFrame(columns=default_cols)
         return df
-        
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error reading {worksheet_name}: {e}")
         return pd.DataFrame(columns=default_cols)
 
 
@@ -57,25 +49,20 @@ def save_sheet_data(worksheet_name, df):
     """Google Sheet me data save/append karne ke liye"""
     gc = get_gspread_client()
     sh = gc.open(SHEET_NAME)
-
     try:
         worksheet = sh.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
         worksheet = sh.add_worksheet(title=worksheet_name, rows=5000, cols=max(len(df.columns), 1))
 
     df_clean = df.fillna("")
-    
-    # Pehle check karo - sheet empty to nahi?
     all_data = worksheet.get_all_values()
-    
     if len(all_data) == 0:
-        # Bilkul khali - headers + data ek saath update karo
         worksheet.update([df_clean.columns.values.tolist()] + df_clean.values.tolist())
     else:
-        # Headers pehle se hain - sirf data rows append karo
         if len(df_clean) > 0:
             worksheet.append_rows(df_clean.values.tolist())
-            
+
+
 def clean_products_df(df):
     df = df.copy()
     df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce").fillna(0).astype(int)
@@ -83,12 +70,13 @@ def clean_products_df(df):
     df["cost_price"] = pd.to_numeric(df["cost_price"], errors="coerce").fillna(0.0)
     return df
 
-# Default Columns Setup
+
 PRODUCTS_COLS = ["id", "product_name", "category", "company", "godown", "quantity", "unit_price", "cost_price"]
 SALES_COLS = ["id", "invoice_no", "customer_name", "product_name", "quantity", "unit_price", "cost_price", "total_amount", "paid_amount", "payment_status", "timestamp"]
 PURCHASES_COLS = ["id", "supplier_name", "product_name", "quantity", "purchase_price", "total_amount", "paid_amount", "payment_status", "purchase_date"]
 CUST_LEDGER_COLS = ["id", "customer_name", "invoice_no", "total_amount", "paid_amount", "balance", "date"]
 SUPP_LEDGER_COLS = ["id", "supplier_name", "bill_no", "total_amount", "paid_amount", "balance", "date"]
+RETURN_COLS = ["id", "original_purchase_id", "supplier_name", "product_name", "quantity", "reason", "return_date"]
 
 # ----------------------------------------------------
 # 2. PDF GENERATOR FUNCTION
@@ -96,18 +84,14 @@ SUPP_LEDGER_COLS = ["id", "supplier_name", "bill_no", "total_amount", "paid_amou
 def generate_pdf(invoice_no, customer_name, items_df, grand_total, paid_amount):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
-
     p.setFont("Helvetica-Bold", 16)
     p.drawString(200, 750, "M. FAROOQ ELECTRIC STORE")
     p.setFont("Helvetica", 10)
     p.drawString(220, 735, "Karachi, Pakistan | Contact: 0300-9294129")
-
     p.line(50, 720, 550, 720)
-
     p.drawString(50, 700, f"Invoice No: {invoice_no}")
     p.drawString(50, 685, f"Customer Name: {customer_name}")
     p.drawString(50, 670, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-
     y = 630
     p.setFont("Helvetica-Bold", 10)
     p.drawString(50, y, "Item Name")
@@ -115,7 +99,6 @@ def generate_pdf(invoice_no, customer_name, items_df, grand_total, paid_amount):
     p.drawString(350, y, "Unit Price")
     p.drawString(450, y, "Total")
     p.line(50, y - 5, 550, y - 5)
-
     y -= 20
     p.setFont("Helvetica", 10)
     for idx, row in items_df.iterrows():
@@ -124,14 +107,12 @@ def generate_pdf(invoice_no, customer_name, items_df, grand_total, paid_amount):
         p.drawString(350, y, f"Rs. {row['unit_price']}")
         p.drawString(450, y, f"Rs. {row['total_amount']}")
         y -= 15
-
     p.line(50, y, 550, y)
     y -= 20
     p.setFont("Helvetica-Bold", 10)
     p.drawString(350, y, f"Grand Total: Rs. {grand_total}")
     p.drawString(350, y - 15, f"Paid Amount: Rs. {paid_amount}")
     p.drawString(350, y - 30, f"Balance: Rs. {grand_total - paid_amount}")
-
     p.showPage()
     p.save()
     buffer.seek(0)
@@ -141,7 +122,6 @@ def generate_pdf(invoice_no, customer_name, items_df, grand_total, paid_amount):
 # 3. STREAMLIT UI & NAVIGATION
 # ----------------------------------------------------
 st.title("⚡M. Farooq Electric Store⚡")
-
 menu = ["Sales & Invoice", "Customer Khata", "Supplier Management", "Profit & Loss Dashboard", "Inventory", "Purchase Return", "Sales Return"]
 choice = st.sidebar.selectbox("Navigation Menu", menu)
 
@@ -151,75 +131,76 @@ if choice == "Sales & Invoice":
     cust_name = st.text_input("Customer Name")
     inv_no = f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     st.text(f"Invoice No: {inv_no}")
-
     products_df = get_sheet_data("products", PRODUCTS_COLS)
     if not products_df.empty:
         products_df = clean_products_df(products_df)
-        
-        # Company filter
-        all_companies = ["All"] + sorted(products_df['company'].unique().tolist())
+        all_companies = ["All"] + sorted(products_df['company'].dropna().unique().tolist())
         selected_company = st.selectbox("Select Company", all_companies)
-        
         if selected_company != "All":
             products_df = products_df[products_df['company'] == selected_company]
-        
-        # Godown filter
-        all_godowns = ["All"] + sorted(products_df['godown'].unique().tolist())
+        all_godowns = ["All"] + sorted(products_df['godown'].dropna().unique().tolist())
         selected_godown = st.selectbox("Select Godown to Buy From", all_godowns)
-        
         if selected_godown != "All":
             products_df = products_df[products_df['godown'] == selected_godown]
-    
-    # Baaki pehle wala code
-        prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
-        selected_prod = products_df[products_df['product_name'] == prod_select].iloc[0]
-        max_qty = int(selected_prod['quantity']) if int(selected_prod['quantity']) > 0 else 1
-        qty = st.number_input("Quantity", min_value=1, max_value=max_qty, value=1)
-        unit_price = float(selected_prod['unit_price'])
-        cost_price = float(selected_prod['cost_price'])
-        total_price = qty * unit_price
-        st.write(f"Unit Price: Rs. {unit_price} | Total: Rs. {total_price}")
-        paid = st.number_input("Paid Amount", min_value=0.0, value=float(total_price))
-        if st.button("Generate Invoice & Save"):
-            if not cust_name.strip():
-                st.error("Customer Name zaroori hai.")
-            else:
-                status = "Paid" if paid >= total_price else "Partial/Unpaid"
-                now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                # Record Sale
-                sales_df = get_sheet_data("sales", SALES_COLS)
-                new_sale = pd.DataFrame([{
-                    "id": len(sales_df) + 1, "invoice_no": inv_no, "customer_name": cust_name,
-                    "product_name": prod_select, "quantity": qty, "unit_price": unit_price,
-                    "cost_price": cost_price, "total_amount": total_price, "paid_amount": paid,
-                    "payment_status": status, "timestamp": now_str
-                }])
-                sales_df = pd.concat([sales_df, new_sale], ignore_index=True)
-                save_sheet_data("sales", sales_df)
-                # Deduct stock
-                products_df.loc[products_df['product_name'] == prod_select, 'quantity'] = int(selected_prod['quantity']) - qty
-                save_sheet_data("products", products_df)
-                # Update Customer Ledger
-                balance = total_price - paid
-                cust_ledger_df = get_sheet_data("customer_ledger", CUST_LEDGER_COLS)
-                new_cust_entry = pd.DataFrame([{
-                    "id": len(cust_ledger_df) + 1, "customer_name": cust_name, "invoice_no": inv_no,
-                    "total_amount": total_price, "paid_amount": paid, "balance": balance,
-                    "date": datetime.now().strftime('%Y-%m-%d')
-                }])
-                cust_ledger_df = pd.concat([cust_ledger_df, new_cust_entry], ignore_index=True)
-                save_sheet_data("customer_ledger", cust_ledger_df)
-                st.success("Sale Recorded Successfully to Google Sheets!")
-
-                # Generate PDF
-                items_data = pd.DataFrame([{
-                    "product_name": prod_select,
-                    "quantity": qty,
-                    "unit_price": unit_price,
-                    "total_amount": total_price
-                }])
-                pdf_out = generate_pdf(inv_no, cust_name, items_data, total_price, paid)
-                st.download_button(label="📄 Download Printable PDF Invoice", data=pdf_out, file_name=f"{inv_no}.pdf", mime="application/pdf")
+        if products_df.empty:
+            st.warning("Selected filter me koi product nahi hai.")
+        else:
+            prod_select = st.selectbox("Select Product", products_df['product_name'].tolist())
+            selected_prod = products_df[products_df['product_name'] == prod_select].iloc[0]
+            max_qty = int(selected_prod['quantity']) if int(selected_prod['quantity']) > 0 else 1
+            qty = st.number_input("Quantity", min_value=1, max_value=max_qty, value=1)
+            unit_price = float(selected_prod['unit_price'])
+            cost_price = float(selected_prod['cost_price'])
+            total_price = qty * unit_price
+            st.write(f"Unit Price: Rs. {unit_price} | Total: Rs. {total_price}")
+            paid = st.number_input("Paid Amount", min_value=0.0, value=float(total_price))
+            if st.button("Generate Invoice & Save"):
+                if not cust_name.strip():
+                    st.error("Customer Name zaroori hai.")
+                else:
+                    status = "Paid" if paid >= total_price else "Partial/Unpaid"
+                    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    sales_df = get_sheet_data("sales", SALES_COLS)
+                    new_sale = pd.DataFrame([{
+                        "id": len(sales_df) + 1, "invoice_no": inv_no, "customer_name": cust_name,
+                        "product_name": prod_select, "quantity": qty, "unit_price": unit_price,
+                        "cost_price": cost_price, "total_amount": total_price, "paid_amount": paid,
+                        "payment_status": status, "timestamp": now_str
+                    }])
+                    save_sheet_data("sales", new_sale)
+                    # Deduct stock
+                    gc = get_gspread_client()
+                    sh = gc.open(SHEET_NAME)
+                    try:
+                        worksheet_prod = sh.worksheet("products")
+                        # Find actual row to update
+                        all_prod_data = get_sheet_data("products", PRODUCTS_COLS)
+                        real_idx = all_prod_data[all_prod_data['product_name'] == prod_select].index[0]
+                        new_qty = int(selected_prod['quantity']) - qty
+                        # Update quantity in sheet - get row values, update
+                        prod_row = all_prod_data.iloc[real_idx].copy()
+                        prod_row['quantity'] = new_qty
+                        # Update using gspread - row = index+2 (header)
+                        worksheet_prod.update(f"A{real_idx+2}:H{real_idx+2}", [prod_row.tolist()])
+                    except Exception as e:
+                        st.warning(f"Stock deduction me error: {e}")
+                    # Customer Ledger
+                    balance = total_price - paid
+                    new_cust_entry = pd.DataFrame([{
+                        "id": 1, "customer_name": cust_name, "invoice_no": inv_no,
+                        "total_amount": total_price, "paid_amount": paid, "balance": balance,
+                        "date": datetime.now().strftime('%Y-%m-%d')
+                    }])
+                    save_sheet_data("customer_ledger", new_cust_entry)
+                    st.success("Sale Recorded Successfully to Google Sheets!")
+                    items_data = pd.DataFrame([{
+                        "product_name": prod_select,
+                        "quantity": qty,
+                        "unit_price": unit_price,
+                        "total_amount": total_price
+                    }])
+                    pdf_out = generate_pdf(inv_no, cust_name, items_data, total_price, paid)
+                    st.download_button(label="📄 Download Printable PDF Invoice", data=pdf_out, file_name=f"{inv_no}.pdf", mime="application/pdf")
     else:
         st.warning("Pehle Purchase/Stock Tab se products add karein.")
 
@@ -241,25 +222,20 @@ elif choice == "Customer Khata":
 # --- SUPPLIER MANAGEMENT ---
 elif choice == "Supplier Management":
     st.subheader("🚛 Supplier Management & Purchases")
-
     with st.form("supplier_form"):
         sup_name = st.text_input("Supplier Name")
         company_options = ["HERO", "ECM", "EDILUX", "HEMIL", "SCHNEIDER", "Other"]
         selected_company = st.selectbox("Select Company/Brand", company_options)
         custom_company = st.text_input("Or Enter Custom Company Name (Optional)")
         final_company = custom_company if custom_company.strip() else selected_company
-        
         prod_name = st.text_input("Product Name")
         godown_options = ["Godown 1", "Godown 2", "Godown 3", "Godown 4", "Godown 5"]
         selected_godown = st.selectbox("Select Godown", godown_options)
-        
         qty = st.number_input("Quantity Received", min_value=1, value=1)
         cost_price = st.number_input("Cost Price Per Item", min_value=0.0, value=100.0)
         sell_price = st.number_input("Selling Price Per Item", min_value=0.0, value=120.0)
         paid_amt = st.number_input("Amount Paid to Supplier", min_value=0.0, value=0.0)
-
         submit = st.form_submit_button("Record Purchase")
-
         if submit:
             if not sup_name.strip() or not prod_name.strip() or not final_company.strip():
                 st.error("Supplier Name, Product Name, aur Company zaroori hain.")
@@ -267,70 +243,59 @@ elif choice == "Supplier Management":
                 tot_amt = qty * cost_price
                 status = "Paid" if paid_amt >= tot_amt else "Pending"
                 today_date = datetime.now().strftime('%Y-%m-%d')
-
-                # 1. Save Purchase - SIRF NEW ENTRY
                 purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
                 new_pur = pd.DataFrame([{
                     "id": len(purchases_df) + 1, "supplier_name": sup_name, "product_name": prod_name,
                     "quantity": qty, "purchase_price": cost_price, "total_amount": tot_amt,
                     "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
                 }])
-                # Append sirf naya row
                 gc = get_gspread_client()
                 sh = gc.open(SHEET_NAME)
                 try:
                     worksheet = sh.worksheet("purchases")
                 except gspread.exceptions.WorksheetNotFound:
                     worksheet = sh.add_worksheet(title="purchases", rows=5000, cols=9)
-                
                 if len(purchases_df) == 0:
                     worksheet.update([new_pur.columns.tolist()] + new_pur.values.tolist())
                 else:
                     worksheet.append_rows(new_pur.values.tolist())
-
-                # 2. Update/Insert Product Stock
                 products_df = get_sheet_data("products", PRODUCTS_COLS)
                 if not products_df.empty:
                     products_df = clean_products_df(products_df)
-
-                existing = products_df[(products_df['product_name'] == prod_name) & 
-                                      (products_df['company'] == final_company) &
-                                      (products_df['godown'] == selected_godown)]
-                
+                existing = products_df[(products_df['product_name'] == prod_name) & (products_df['company'] == final_company) & (products_df['godown'] == selected_godown)]
                 if not existing.empty:
                     idx = existing.index[0]
-                    products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
-                    products_df.at[idx, 'unit_price'] = sell_price
-                    products_df.at[idx, 'cost_price'] = cost_price
-                    # Update sirf that row
-                    new_val = products_df.iloc[idx].tolist()
-                    worksheet_prod = sh.worksheet("products")
-                    worksheet_prod.update_values([[idx+2]], [new_val])  # Row number = index + 2
+                    # update existing product quantity
+                    try:
+                        worksheet_prod = sh.worksheet("products")
+                        prod_row = products_df.iloc[idx].copy()
+                        prod_row['quantity'] = int(prod_row['quantity']) + qty
+                        prod_row['unit_price'] = sell_price
+                        prod_row['cost_price'] = cost_price
+                        worksheet_prod.update(f"A{idx+2}:H{idx+2}", [prod_row.tolist()])
+                    except Exception as e:
+                        st.warning(f"Product update error: {e}")
                 else:
                     new_prod = pd.DataFrame([{
                         "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
-                        "company": final_company, "godown": selected_godown, "quantity": qty, 
+                        "company": final_company, "godown": selected_godown, "quantity": qty,
                         "unit_price": sell_price, "cost_price": cost_price
                     }])
-                    worksheet_prod = sh.worksheet("products")
+                    try:
+                        worksheet_prod = sh.worksheet("products")
+                    except gspread.exceptions.WorksheetNotFound:
+                        worksheet_prod = sh.add_worksheet(title="products", rows=5000, cols=8)
                     if len(products_df) == 0:
                         worksheet_prod.update([new_prod.columns.tolist()] + new_prod.values.tolist())
                     else:
                         worksheet_prod.append_rows(new_prod.values.tolist())
-
-                # 3. Supplier Ledger
-                supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
+                # Supplier Ledger
                 new_supp_entry = pd.DataFrame([{
-                    "id": len(supp_ledger_df) + 1, "supplier_name": sup_name, "bill_no": "PUR-NEW",
+                    "id": 1, "supplier_name": sup_name, "bill_no": f"PUR-{len(purchases_df)+1}",
                     "total_amount": tot_amt, "paid_amount": paid_amt, "balance": tot_amt - paid_amt,
                     "date": today_date
                 }])
-                worksheet_supp = sh.worksheet("supplier_ledger")
-                if len(supp_ledger_df) == 0:
-                    worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
-                else:
-                    worksheet_supp.append_rows(new_supp_entry.values.tolist())
-
+                save_sheet_data("supplier_ledger", new_supp_entry)
                 st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
@@ -358,143 +323,122 @@ elif choice == "Profit & Loss Dashboard":
 elif choice == "Inventory":
     st.subheader("📦 Main Stock (Products) - Godown Wise")
     stock_df = get_sheet_data("products", PRODUCTS_COLS)
-    
     if not stock_df.empty:
         stock_df = clean_products_df(stock_df)
-        
-        # Godown filter
-        all_godowns = ["All"] + sorted(stock_df['godown'].unique().tolist())
+        all_godowns = ["All"] + sorted(stock_df['godown'].dropna().unique().tolist())
         selected_godown_filter = st.selectbox("Filter by Godown", all_godowns)
-        
         if selected_godown_filter != "All":
             stock_df = stock_df[stock_df['godown'] == selected_godown_filter]
-        
         st.dataframe(stock_df, use_container_width=True)
-        
-        # Godown Summary
         st.subheader("📊 Godown Summary")
         summary = stock_df.groupby('godown').agg({'quantity': 'sum', 'product_name': 'count'}).reset_index()
         summary.columns = ['Godown', 'Total Quantity', 'No. of Items']
         st.table(summary)
     else:
         st.info("Koi Inventory Available nahi hai.")
-# --- PURCHASE RETURN ---
+
+# --- PURCHASE RETURN --- FIXED FULLY
 elif choice == "Purchase Return":
     st.subheader("🔄 Purchase Return")
-    
     purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
-    
-    if not purchases_df.empty:
+
+    if purchases_df.empty:
+        st.warning("Pehle Supplier Management se purchases add karein.")
+    else:
         # ID ko numeric convert karo
         purchases_df['id'] = pd.to_numeric(purchases_df['id'], errors='coerce')
-        
-        if not purchases_df.empty:
-            purchase_id = st.number_input("Enter Purchase ID to Return", min_value=1)
-            purchase_record = purchases_df[purchases_df['id'] == purchase_id]
-            
-            if not purchase_record.empty:
-                record = purchase_record.iloc[0]
-                st.write(f"Returning Purchase ID: {record['id']} from {record['supplier_name']} for {record['quantity']} {record['product_name']}")
-                
-                return_qty = st.number_input("Quantity to Return", min_value=1, max_value=int(record['quantity']), value=1)
-                reason = st.text_area("Reason for Return")
-                
-                if st.button("Process Purchase Return"):
-                    # Deduct stock
+        purchases_df = purchases_df.dropna(subset=['id'])
+        purchases_df['id'] = purchases_df['id'].astype(int)
+
+        st.dataframe(purchases_df, use_container_width=True)
+
+        purchase_id = st.number_input("Enter Purchase ID to Return", min_value=1, step=1)
+        purchase_record = purchases_df[purchases_df['id'] == purchase_id]
+
+        if not purchase_record.empty:
+            record = purchase_record.iloc[0]
+            st.info(f"Selected -> ID: {record['id']} | Supplier: {record['supplier_name']} | Product: {record['product_name']} | Qty: {record['quantity']}")
+
+            max_return = int(float(str(record['quantity']).strip() or 0))
+            if max_return < 1:
+                max_return = 1
+
+            return_qty = st.number_input("Quantity to Return", min_value=1, max_value=max_return, value=1)
+            reason = st.text_area("Reason for Return", placeholder="Defective / Wrong item etc.")
+
+            if st.button("Process Purchase Return"):
+                try:
+                    # 1. Deduct from products stock
                     products_df = get_sheet_data("products", PRODUCTS_COLS)
                     if not products_df.empty:
                         products_df = clean_products_df(products_df)
-                        idx = products_df[products_df['product_name'] == record['product_name']].index
-                        if not idx.empty:
-                            idx = idx[0]
-                            new_qty = int(products_df.at[idx, 'quantity']) - return_qty
-                            products_df.at[idx, 'quantity'] = max(new_qty, 0)
-                            save_sheet_data("products", products_df)
-                    
-                    st.success(f"Returned {return_qty} units. Stock updated!")
-            else:
-                st.info("Purchase ID not found.")
-else:
-    st.warning("Pehle Supplier Management se purchases add karein.")
+                        # Match by product name
+                        prod_idx = products_df[products_df['product_name'] == record['product_name']].index
+                        if not prod_idx.empty:
+                            prod_idx = prod_idx[0]
+                            gc = get_gspread_client()
+                            sh = gc.open(SHEET_NAME)
+                            worksheet_prod = sh.worksheet("products")
+                            prod_row = products_df.iloc[prod_idx].copy()
+                            new_stock = int(prod_row['quantity']) - return_qty
+                            prod_row['quantity'] = max(new_stock, 0)
+                            worksheet_prod.update(f"A{prod_idx+2}:H{prod_idx+2}", [prod_row.tolist()])
 
-# Save return in "purchase_returns"
-gc = get_gspread_client()
-try:
-    sh = gc.open(SHEET_NAME)
-except Exception as e:
-    st.error("Error opening Google Sheet.")
-    raise e
-
-try:
-    sheet_returns = sh.worksheet("purchase_returns")
-except gspread.exceptions.WorksheetNotFound:
-    sheet_returns = sh.add_worksheet(title="purchase_returns", rows=1000, cols=20)
-    return_df = get_sheet_data("purchase_returns", ["id", "original_purchase_id", "supplier_name", "product_name", "quantity_returned", "reason", "return_date"])
-    new_return_id = len(return_df) + 1
-    return_record = pd.DataFrame([{
-    "id": new_return_id,
-    "original_purchase_id": purchase_id,
-    "supplier_name": record['supplier_name'],
-    "product_name": record['product_name'],
-    "quantity_returned": return_qty,
-    "reason": reason,
-    "return_date": datetime.now().strftime('%Y-%m-%d')
-         }])
-    sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
-    st.success("Purchase Return processed successfully!")
-else:
-        st.info("Purchase ID not found.")
-  else:
-        st.info("No purchase records available.")
-
-# --- SALES RETURN ---
-elif choice == "Sales Return":
-    st.subheader("🔄 Sales Return")
-    # Load sales data
-    sales_df = get_sheet_data("sales", SALES_COLS)
-    if not sales_df.empty:
-        sale_id = st.number_input("Enter Sale ID to Return", min_value=1)
-        sale_record = sales_df[sales_df['id'] == sale_id]
-        if not sale_record.empty:
-            record = sale_record.iloc[0]
-            st.write(f"Returning Sale ID: {record['id']} for {record['product_name']} (Qty: {record['quantity']})")
-            return_qty = st.number_input("Quantity to Return", min_value=1, max_value=int(record['quantity']))
-            reason = st.text_area("Reason for Return")
-            if st.button("Process Sales Return"):
-                # Update stock: add back returned quantity
-                products_df = get_sheet_data("products", PRODUCTS_COLS)
-                if not products_df.empty:
-                    products_df = clean_products_df(products_df)
-                    idx = products_df[products_df['product_name'] == record['product_name']].index
-                    if not idx.empty:
-                        idx = idx[0]
-                        new_qty = int(products_df.at[idx, 'quantity']) + return_qty
-                        products_df.at[idx, 'quantity'] = new_qty
-                        save_sheet_data("products", products_df)
-                # Save return in "sales_returns"
-                gc = get_gspread_client()
-                try:
+                    # 2. Save return in "purchase_returns"
+                    gc = get_gspread_client()
                     sh = gc.open(SHEET_NAME)
+                    try:
+                        sheet_returns = sh.worksheet("purchase_returns")
+                    except gspread.exceptions.WorksheetNotFound:
+                        sheet_returns = sh.add_worksheet(title="purchase_returns", rows=1000, cols=20)
+
+                    return_df = get_sheet_data("purchase_returns", RETURN_COLS)
+                    new_return_id = len(return_df) + 1
+
+                    new_return = pd.DataFrame([{
+                        "id": new_return_id,
+                        "original_purchase_id": purchase_id,
+                        "supplier_name": record['supplier_name'],
+                        "product_name": record['product_name'],
+                        "quantity": return_qty,
+                        "reason": reason,
+                        "return_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    }])
+
+                    if len(return_df) == 0:
+                        sheet_returns.update([new_return.columns.tolist()] + new_return.values.tolist())
+                    else:
+                        sheet_returns.append_rows(new_return.values.tolist())
+
+                    st.success(f"Returned {return_qty} units of {record['product_name']}. Stock updated and return saved!")
+
+                    # 3. Optional: Update original purchase quantity
+                    try:
+                        # Update purchase sheet to reduce quantity
+                        purchase_sheet = sh.worksheet("purchases")
+                        real_pur_idx = purchases_df[purchases_df['id'] == purchase_id].index[0]
+                        # Get row values and update quantity
+                        pur_row_values = purchase_sheet.row_values(real_pur_idx + 2)
+                        # quantity is at index 3 (0:id,1:supplier,2:product,3:quantity)
+                        if pur_row_values:
+                            current_qty = int(float(pur_row_values[3]))
+                            pur_row_values[3] = str(max(current_qty - return_qty, 0))
+                            # recalc total_amount if possible: total = qty * purchase_price
+                            try:
+                                price = float(pur_row_values[4])
+                                pur_row_values[5] = str((max(current_qty - return_qty, 0)) * price)
+                            except:
+                                pass
+                            purchase_sheet.update(f"A{real_pur_idx+2}:I{real_pur_idx+2}", [pur_row_values])
+                    except Exception as e:
+                        st.warning(f"Return saved but purchase qty update failed: {e}")
+
                 except Exception as e:
-                    st.error("Error opening Google Sheet.")
-                    raise e
-                try:
-                    sheet_returns = sh.worksheet("sales_returns")
-                except gspread.exceptions.WorksheetNotFound:
-                    sheet_returns = sh.add_worksheet(title="sales_returns", rows=1000, cols=10)
-                return_df = get_sheet_data("sales_returns", ["id", "original_sale_id", "product_name", "quantity_returned", "reason", "return_date"])
-                new_return_id = len(return_df) + 1
-                return_record = pd.DataFrame([{
-                    "id": new_return_id,
-                    "original_sale_id": sale_id,
-                    "product_name": record['product_name'],
-                    "quantity_returned": return_qty,
-                    "reason": reason,
-                    "return_date": datetime.now().strftime('%Y-%m-%d')
-                }])
-                sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
-                st.success("Sales Return processed successfully!")
+                    st.error(f"Error processing return: {e}")
         else:
-            st.info("Sale ID not found.")
-    else:
-        st.info("No sales records available.") 
+            if purchase_id > 0:
+                st.info("Purchase ID not found. Upar table me available IDs dekhein.")
+
+elif choice == "Sales Return":
+    st.subheader("↩️ Sales Return - Coming Soon")
+    st.info("Ye feature next update me add hoga.")
