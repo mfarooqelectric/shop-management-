@@ -62,7 +62,7 @@ def save_sheet_data(worksheet_name, df):
         worksheet = sh.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
         # 5000 rows ka limit
-        worksheet = sh.add_worksheet(title=worksheet_name, rows=5000, cols=max(len(df.columns), 1))
+        worksheet = sh.add_worksheet(title=worksheet_name, rows=1000, cols=max(len(df.columns), 1))
 
     df_clean = df.fillna("")
     
