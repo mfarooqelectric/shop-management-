@@ -442,7 +442,7 @@ except gspread.exceptions.WorksheetNotFound:
          }])
     sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
     st.success("Purchase Return processed successfully!")
-        else:
+    else:
             st.info("Purchase ID not found.")
     else:
         st.info("No purchase records available.")
