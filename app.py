@@ -244,18 +244,12 @@ elif choice == "Supplier Management":
 
     with st.form("supplier_form"):
         sup_name = st.text_input("Supplier Name")
-        
-        # COMPANY SELECTION
-        company_options = ["Hero", "EcM", "Hemil", "Clipsal", "Edilux", "Other"]
+        company_options = ["HERO", "ECM", "EDILUX", "HEMIL", "SCHNEIDER", "Other"]
         selected_company = st.selectbox("Select Company/Brand", company_options)
         custom_company = st.text_input("Or Enter Custom Company Name (Optional)")
-        
-        # Agar custom likha ho to use karo, nahi to dropdown se
         final_company = custom_company if custom_company.strip() else selected_company
         
         prod_name = st.text_input("Product Name")
-        
-        # GODOWN SELECTION
         godown_options = ["Godown 1", "Godown 2", "Godown 3", "Godown 4", "Godown 5"]
         selected_godown = st.selectbox("Select Godown", godown_options)
         
@@ -274,60 +268,68 @@ elif choice == "Supplier Management":
                 status = "Paid" if paid_amt >= tot_amt else "Pending"
                 today_date = datetime.now().strftime('%Y-%m-%d')
 
-                # 1. Save Purchase
+                # 1. Save Purchase - SIRF NEW ENTRY
                 purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
                 new_pur = pd.DataFrame([{
                     "id": len(purchases_df) + 1, "supplier_name": sup_name, "product_name": prod_name,
                     "quantity": qty, "purchase_price": cost_price, "total_amount": tot_amt,
                     "paid_amount": paid_amt, "payment_status": status, "purchase_date": today_date
                 }])
-                purchases_df = pd.concat([purchases_df, new_pur], ignore_index=True)
-                save_sheet_data("purchases", purchases_df)
+                # Append sirf naya row
+                gc = get_gspread_client()
+                sh = gc.open(SHEET_NAME)
+                try:
+                    worksheet = sh.worksheet("purchases")
+                except gspread.exceptions.WorksheetNotFound:
+                    worksheet = sh.add_worksheet(title="purchases", rows=5000, cols=9)
+                
+                if len(purchases_df) == 0:
+                    worksheet.update([new_pur.columns.tolist()] + new_pur.values.tolist())
+                else:
+                    worksheet.append_rows(new_pur.values.tolist())
 
                 # 2. Update/Insert Product Stock
                 products_df = get_sheet_data("products", PRODUCTS_COLS)
                 if not products_df.empty:
                     products_df = clean_products_df(products_df)
 
-                # Check if product already exists with same company and godown
-                if not products_df.empty and prod_name in products_df['product_name'].values:
-                    existing = products_df[(products_df['product_name'] == prod_name) & 
-                                          (products_df['company'] == final_company) &
-                                          (products_df['godown'] == selected_godown)]
-                    
-                    if not existing.empty:
-                        # Existing product - add quantity
-                        idx = existing.index[0]
-                        products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
-                        products_df.at[idx, 'unit_price'] = sell_price
-                        products_df.at[idx, 'cost_price'] = cost_price
-                    else:
-                        # Same product but different company/godown - create new entry
-                        new_prod = pd.DataFrame([{
-                            "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
-                            "company": final_company, "godown": selected_godown, "quantity": qty, 
-                            "unit_price": sell_price, "cost_price": cost_price
-                        }])
-                        products_df = pd.concat([products_df, new_prod], ignore_index=True)
+                existing = products_df[(products_df['product_name'] == prod_name) & 
+                                      (products_df['company'] == final_company) &
+                                      (products_df['godown'] == selected_godown)]
+                
+                if not existing.empty:
+                    idx = existing.index[0]
+                    products_df.at[idx, 'quantity'] = int(products_df.at[idx, 'quantity']) + qty
+                    products_df.at[idx, 'unit_price'] = sell_price
+                    products_df.at[idx, 'cost_price'] = cost_price
+                    # Update sirf that row
+                    new_val = products_df.iloc[idx].tolist()
+                    worksheet_prod = sh.worksheet("products")
+                    worksheet_prod.update_values([[idx+2]], [new_val])  # Row number = index + 2
                 else:
-                    # New product - create entry
                     new_prod = pd.DataFrame([{
                         "id": len(products_df) + 1, "product_name": prod_name, "category": "General",
                         "company": final_company, "godown": selected_godown, "quantity": qty, 
                         "unit_price": sell_price, "cost_price": cost_price
                     }])
-                    products_df = pd.concat([products_df, new_prod], ignore_index=True)
-                save_sheet_data("products", products_df)
+                    worksheet_prod = sh.worksheet("products")
+                    if len(products_df) == 0:
+                        worksheet_prod.update([new_prod.columns.tolist()] + new_prod.values.tolist())
+                    else:
+                        worksheet_prod.append_rows(new_prod.values.tolist())
 
-                # 3. Save Supplier Ledger
+                # 3. Supplier Ledger
                 supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
                 new_supp_entry = pd.DataFrame([{
                     "id": len(supp_ledger_df) + 1, "supplier_name": sup_name, "bill_no": "PUR-NEW",
                     "total_amount": tot_amt, "paid_amount": paid_amt, "balance": tot_amt - paid_amt,
                     "date": today_date
                 }])
-                supp_ledger_df = pd.concat([supp_ledger_df, new_supp_entry], ignore_index=True)
-                save_sheet_data("supplier_ledger", supp_ledger_df)
+                worksheet_supp = sh.worksheet("supplier_ledger")
+                if len(supp_ledger_df) == 0:
+                    worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
+                else:
+                    worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
                 st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
