@@ -416,10 +416,11 @@ elif choice == "Purchase Return":
                 st.info("Purchase ID not found.")
     else:
         st.warning("Pehle Supplier Management se purchases add karein.")
-         # Save return in "purchase_returns"
-                    gc = get_gspread_client()
-                try:
-                    sh = gc.open(SHEET_NAME)
+         
+        # Save return in "purchase_returns"
+         gc = get_gspread_client()
+         try:
+                  sh = gc.open(SHEET_NAME)
                 except Exception as e:
                     st.error("Error opening Google Sheet.")
                     raise e
