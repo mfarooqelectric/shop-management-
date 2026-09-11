@@ -414,7 +414,7 @@ elif choice == "Purchase Return":
                     st.success(f"Returned {return_qty} units. Stock updated!")
             else:
                 st.info("Purchase ID not found.")
-   else:
+else:
     st.warning("Pehle Supplier Management se purchases add karein.")
 
 # Save return in "purchase_returns"
