@@ -439,9 +439,9 @@ except gspread.exceptions.WorksheetNotFound:
     "quantity_returned": return_qty,
     "reason": reason,
     "return_date": datetime.now().strftime('%Y-%m-%d')
-                }])
-                sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
-                st.success("Purchase Return processed successfully!")
+         }])
+    sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
+    st.success("Purchase Return processed successfully!")
         else:
             st.info("Purchase ID not found.")
     else:
