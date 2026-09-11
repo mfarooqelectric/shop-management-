@@ -414,20 +414,21 @@ elif choice == "Purchase Return":
                     st.success(f"Returned {return_qty} units. Stock updated!")
             else:
                 st.info("Purchase ID not found.")
-    else:
-        st.warning("Pehle Supplier Management se purchases add karein.")
-         
-        # Save return in "purchase_returns"
-         gc = get_gspread_client()
-         try:
-                  sh = gc.open(SHEET_NAME)
-                except Exception as e:
-                    st.error("Error opening Google Sheet.")
-                    raise e
-                try:
-                    sheet_returns = sh.worksheet("purchase_returns")
-                except gspread.exceptions.WorksheetNotFound:
-                    sheet_returns = sh.add_worksheet(title="purchase_returns", rows=1000, cols=10)
+   else:
+    st.warning("Pehle Supplier Management se purchases add karein.")
+
+# Save return in "purchase_returns"
+gc = get_gspread_client()
+try:
+    sh = gc.open(SHEET_NAME)
+except Exception as e:
+    st.error("Error opening Google Sheet.")
+    raise e
+
+try:
+    sheet_returns = sh.worksheet("purchase_returns")
+except gspread.exceptions.WorksheetNotFound:
+    sheet_returns = sh.add_worksheet(title="purchase_returns", rows=1000, cols=20)
                 return_df = get_sheet_data("purchase_returns", ["id", "original_purchase_id", "supplier_name", "product_name", "quantity_returned", "reason", "return_date"])
                 new_return_id = len(return_df) + 1
                 return_record = pd.DataFrame([{
