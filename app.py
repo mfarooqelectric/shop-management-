@@ -61,8 +61,7 @@ def save_sheet_data(worksheet_name, df):
     try:
         worksheet = sh.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
-        # 5000 rows ka limit
-        worksheet = sh.add_worksheet(title=worksheet_name, rows=1000, cols=max(len(df.columns), 1))
+        worksheet = sh.add_worksheet(title=worksheet_name, rows=5000, cols=max(len(df.columns), 1))
 
     df_clean = df.fillna("")
     
@@ -70,8 +69,12 @@ def save_sheet_data(worksheet_name, df):
     all_data = worksheet.get_all_values()
     
     if len(all_data) == 0:
-        # Bilkul khali - headers + data
+        # Bilkul khali - headers + data ek saath update karo
         worksheet.update([df_clean.columns.values.tolist()] + df_clean.values.tolist())
+    else:
+        # Headers pehle se hain - sirf data rows append karo
+        if len(df_clean) > 0:
+            worksheet.append_rows(df_clean.values.tolist())
     else:
         # Headers pehle se hain - sirf data append karo
         for row in df_clean.values.tolist():
