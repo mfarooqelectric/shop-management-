@@ -429,16 +429,16 @@ try:
     sheet_returns = sh.worksheet("purchase_returns")
 except gspread.exceptions.WorksheetNotFound:
     sheet_returns = sh.add_worksheet(title="purchase_returns", rows=1000, cols=20)
-                return_df = get_sheet_data("purchase_returns", ["id", "original_purchase_id", "supplier_name", "product_name", "quantity_returned", "reason", "return_date"])
-                new_return_id = len(return_df) + 1
-                return_record = pd.DataFrame([{
-                    "id": new_return_id,
-                    "original_purchase_id": purchase_id,
-                    "supplier_name": record['supplier_name'],
-                    "product_name": record['product_name'],
-                    "quantity_returned": return_qty,
-                    "reason": reason,
-                    "return_date": datetime.now().strftime('%Y-%m-%d')
+    return_df = get_sheet_data("purchase_returns", ["id", "original_purchase_id", "supplier_name", "product_name", "quantity_returned", "reason", "return_date"])
+    new_return_id = len(return_df) + 1
+    return_record = pd.DataFrame([{
+    "id": new_return_id,
+    "original_purchase_id": purchase_id,
+    "supplier_name": record['supplier_name'],
+    "product_name": record['product_name'],
+    "quantity_returned": return_qty,
+    "reason": reason,
+    "return_date": datetime.now().strftime('%Y-%m-%d')
                 }])
                 sheet_returns.append_rows(return_record.values.tolist(), value_input_option='RAW')
                 st.success("Purchase Return processed successfully!")
