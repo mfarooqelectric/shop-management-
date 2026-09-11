@@ -381,27 +381,41 @@ elif choice == "Inventory":
 # --- PURCHASE RETURN ---
 elif choice == "Purchase Return":
     st.subheader("🔄 Purchase Return")
-    # Load existing purchase data
+    
     purchases_df = get_sheet_data("purchases", PURCHASES_COLS)
+    
     if not purchases_df.empty:
-        purchase_id = st.number_input("Enter Purchase ID to Return", min_value=1)
-        purchase_record = purchases_df[purchases_df['id'] == purchase_id]
-        if not purchase_record.empty:
-            record = purchase_record.iloc[0]
-            st.write(f"Returning Purchase ID: {record['id']} from {record['supplier_name']} for {record['product_name']} (Qty: {record['quantity']})")
-            return_qty = st.number_input("Quantity to Return", min_value=1, max_value=int(record['quantity']))
-            reason = st.text_area("Reason for Return")
-            if st.button("Process Purchase Return"):
-                # Deduct stock
-                products_df = get_sheet_data("products", PRODUCTS_COLS)
-                if not products_df.empty:
-                    products_df = clean_products_df(products_df)
-                    idx = products_df[products_df['product_name'] == record['product_name']].index
-                    if not idx.empty:
-                        idx = idx[0]
-                        new_qty = int(products_df.at[idx, 'quantity']) - return_qty
-                        products_df.at[idx, 'quantity'] = max(new_qty, 0)
-                        save_sheet_data("products", products_df)
+        # ID ko numeric convert karo
+        purchases_df['id'] = pd.to_numeric(purchases_df['id'], errors='coerce')
+        
+        if not purchases_df.empty:
+            purchase_id = st.number_input("Enter Purchase ID to Return", min_value=1)
+            purchase_record = purchases_df[purchases_df['id'] == purchase_id]
+            
+            if not purchase_record.empty:
+                record = purchase_record.iloc[0]
+                st.write(f"Returning Purchase ID: {record['id']} from {record['supplier_name']} for {record['quantity']} {record['product_name']}")
+                
+                return_qty = st.number_input("Quantity to Return", min_value=1, max_value=int(record['quantity']), value=1)
+                reason = st.text_area("Reason for Return")
+                
+                if st.button("Process Purchase Return"):
+                    # Deduct stock
+                    products_df = get_sheet_data("products", PRODUCTS_COLS)
+                    if not products_df.empty:
+                        products_df = clean_products_df(products_df)
+                        idx = products_df[products_df['product_name'] == record['product_name']].index
+                        if not idx.empty:
+                            idx = idx[0]
+                            new_qty = int(products_df.at[idx, 'quantity']) - return_qty
+                            products_df.at[idx, 'quantity'] = max(new_qty, 0)
+                            save_sheet_data("products", products_df)
+                    
+                    st.success(f"Returned {return_qty} units. Stock updated!")
+            else:
+                st.info("Purchase ID not found.")
+    else:
+        st.warning("Pehle Supplier Management se purchases add karein.")
                 # Save return in "purchase_returns"
                 gc = get_gspread_client()
                 try:
