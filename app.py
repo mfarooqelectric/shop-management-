@@ -75,11 +75,7 @@ def save_sheet_data(worksheet_name, df):
         # Headers pehle se hain - sirf data rows append karo
         if len(df_clean) > 0:
             worksheet.append_rows(df_clean.values.tolist())
-    else:
-        # Headers pehle se hain - sirf data append karo
-        for row in df_clean.values.tolist():
-            worksheet.append_row(row)
-
+            
 def clean_products_df(df):
     df = df.copy()
     df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce").fillna(0).astype(int)
