@@ -75,7 +75,7 @@ PRODUCTS_COLS = ["id", "product_name", "category", "company", "godown", "quantit
 SALES_COLS = ["id", "invoice_no", "customer_name", "product_name", "quantity", "unit_price", "cost_price", "total_amount", "paid_amount", "payment_status", "timestamp"]
 PURCHASES_COLS = ["id", "supplier_name", "product_name", "quantity", "purchase_price", "total_amount", "paid_amount", "payment_status", "purchase_date"]
 CUST_LEDGER_COLS = ["id", "customer_name", "invoice_no", "total_amount", "paid_amount", "balance", "date"]
-SUPP_LEDGER_COLS = ["id", "supplier_name", "bill_no", "total_amount", "paid_amount", "balance", "date", "total_balance"]
+SUPP_LEDGER_COLS = ["id", "supplier_name", "bill_no", "total_amount", "paid_amount", "balance", "date",]
 RETURN_COLS = ["id", "original_purchase_id", "supplier_name", "product_name", "quantity", "reason", "return_date"]
 
 # ----------------------------------------------------
