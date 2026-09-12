@@ -331,6 +331,7 @@ new_supp_entry = pd.DataFrame([{
                     worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
                 st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
+
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
     st.subheader("📊 Profit & Loss Dashboard")
