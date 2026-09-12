@@ -297,6 +297,30 @@ elif choice == "Supplier Management":
                 }])
                 save_sheet_data("supplier_ledger", new_supp_entry)
                 st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
+                # 3. Supplier Ledger - Running Balance
+supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
+
+# Same supplier ke previous balance dekho
+supplier_previous = supp_ledger_df[supp_ledger_df['supplier_name'] == sup_name]
+
+if not supplier_previous.empty:
+    prev_balance = pd.to_numeric(supplier_previous.iloc[-1]['balance'], errors='coerce')
+else:
+    prev_balance = 0
+
+# Running balance = previous + current
+current_balance = tot_amt - paid_amt
+running_balance = prev_balance + current_balance
+
+new_supp_entry = pd.DataFrame([{
+    "id": len(supp_ledger_df) + 1, 
+    "supplier_name": sup_name, 
+    "bill_no": "PUR-NEW",
+    "total_amount": tot_amt, 
+    "paid_amount": paid_amt, 
+    "balance": running_balance,  # ← RUNNING BALANCE
+    "date": today_date
+}])
 
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
