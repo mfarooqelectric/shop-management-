@@ -319,7 +319,7 @@ new_supp_entry = pd.DataFrame([{
     "total_amount": tot_amt, 
     "paid_amount": paid_amt, 
     "balance": running_balance,  # ← RUNNING BALANCE
-    "date": today_date
+    "date": today_date,
 }])
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
