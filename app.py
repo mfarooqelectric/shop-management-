@@ -321,7 +321,6 @@ new_supp_entry = pd.DataFrame([{
     "balance": running_balance,  # ← RUNNING BALANCE
     "date": today_date
 }])
-
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
     st.subheader("📊 Profit & Loss Dashboard")
