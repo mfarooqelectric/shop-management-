@@ -321,7 +321,7 @@ new_supp_entry = pd.DataFrame([{
     "balance": running_balance,  # ← RUNNING BALANCE
     "date": today_date,
 }])
-                gc = get_gspread_client()
+               gc = get_gspread_client()
                 sh = gc.open(SHEET_NAME)
                 worksheet_supp = sh.worksheet("supplier_ledger")
                 
