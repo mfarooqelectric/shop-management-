@@ -334,8 +334,8 @@ else:
 
 # --- PROFIT & LOSS DASHBOARD ---
     elif choice == "Profit & Loss Dashboard":
-     st.subheader("📊 Profit & Loss Dashboard")
-     sales_df = get_sheet_data("sales", SALES_COLS)
+        st.subheader("📊 Profit & Loss Dashboard")
+        sales_df = get_sheet_data("sales", SALES_COLS)
     if not sales_df.empty:
         sales_df['unit_price'] = pd.to_numeric(sales_df['unit_price'], errors='coerce').fillna(0.0)
         sales_df['cost_price'] = pd.to_numeric(sales_df['cost_price'], errors='coerce').fillna(0.0)
