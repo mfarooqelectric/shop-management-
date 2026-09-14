@@ -333,7 +333,7 @@ else:
     st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
-    elif choice == "Profit & Loss Dashboard":
+elif choice == "Profit & Loss Dashboard":
         st.subheader("📊 Profit & Loss Dashboard")
         sales_df = get_sheet_data("sales", SALES_COLS)
     if not sales_df.empty:
