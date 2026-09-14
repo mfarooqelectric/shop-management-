@@ -330,11 +330,11 @@ else:
     else:
         worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
-    st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
+st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
 elif choice == "Profit & Loss Dashboard":
-        st.subheader("📊 Profit & Loss Dashboard")
+st.subheader("📊 Profit & Loss Dashboard")
         sales_df = get_sheet_data("sales", SALES_COLS)
     if not sales_df.empty:
         sales_df['unit_price'] = pd.to_numeric(sales_df['unit_price'], errors='coerce').fillna(0.0)
