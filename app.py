@@ -309,27 +309,27 @@ else:
     prev_balance = 0
     
 # 3. Supplier Ledger - Simple Balance
-                supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
+    supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
                 
-                new_supp_entry = pd.DataFrame([{
-                    "id": len(supp_ledger_df) + 1,
-                    ...
-                    "balance": tot_amt - paid_amt,
-                    ...
-                    "supplier_name": sup_name, 
-                    "bill_no": "PUR-NEW",
-                    "total_amount": tot_amt, 
-                    "paid_amount": paid_amt, 
-                    "balance": tot_amt - paid_amt,
-                    "date": today_date
-                }])
+    new_supp_entry = pd.DataFrame([{
+    "id": len(supp_ledger_df) + 1,
+    ...
+    "balance": tot_amt - paid_amt,
+    ...
+    "supplier_name": sup_name, 
+    "bill_no": "PUR-NEW",
+    "total_amount": tot_amt, 
+    "paid_amount": paid_amt, 
+    "balance": tot_amt - paid_amt,
+    "date": today_date
+     }])
                 
-                gc = get_gspread_client()
-                sh = gc.open(SHEET_NAME)
-                worksheet_supp = sh.worksheet("supplier_ledger")
+     gc = get_gspread_client()
+     sh = gc.open(SHEET_NAME)
+     worksheet_supp = sh.worksheet("supplier_ledger")
                 
-                if len(supp_ledger_df) == 0:
-                    worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
+ if len(supp_ledger_df) == 0:
+     worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
                 else:
                     worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
