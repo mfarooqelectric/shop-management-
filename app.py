@@ -321,21 +321,21 @@ else:
     "date": today_date
 }])
                 
-gc = get_gspread_client()
-sh = gc.open(SHEET_NAME)
-worksheet_supp = sh.worksheet("supplier_ledger")
+    gc = get_gspread_client()
+    sh = gc.open(SHEET_NAME)
+    worksheet_supp = sh.worksheet("supplier_ledger")
 
-if len(supp_ledger_df) == 0:
-    worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
-else:
-    worksheet_supp.append_rows(new_supp_entry.values.tolist())
+    if len(supp_ledger_df) == 0:
+        worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
+    else:
+        worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
-st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
+    st.success(f"Stock Added - Company: {final_company}, Godown: {selected_godown}!")
 
 # --- PROFIT & LOSS DASHBOARD ---
- elif choice == "Profit & Loss Dashboard":
-    st.subheader("📊 Profit & Loss Dashboard")
-    sales_df = get_sheet_data("sales", SALES_COLS)
+    elif choice == "Profit & Loss Dashboard":
+     st.subheader("📊 Profit & Loss Dashboard")
+     sales_df = get_sheet_data("sales", SALES_COLS)
     if not sales_df.empty:
         sales_df['unit_price'] = pd.to_numeric(sales_df['unit_price'], errors='coerce').fillna(0.0)
         sales_df['cost_price'] = pd.to_numeric(sales_df['cost_price'], errors='coerce').fillna(0.0)
