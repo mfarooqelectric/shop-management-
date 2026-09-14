@@ -320,7 +320,6 @@ else:
     "balance": tot_amt - paid_amt,
     "date": today_date
 }])
-    
      gc = get_gspread_client()
      sh = gc.open(SHEET_NAME)
      worksheet_supp = sh.worksheet("supplier_ledger")
