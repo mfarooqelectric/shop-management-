@@ -307,20 +307,23 @@ if not supplier_previous.empty:
     prev_balance = pd.to_numeric(supplier_previous.iloc[-1]['balance'], errors='coerce')
 else:
     prev_balance = 0
-
-# Running balance = previous + current
-current_balance = tot_amt - paid_amt
-running_balance = prev_balance + current_balance
-
-new_supp_entry = pd.DataFrame([{
-    "id": len(supp_ledger_df) + 1, 
-    "supplier_name": sup_name, 
-    "bill_no": "PUR-NEW",
-    "total_amount": tot_amt, 
-    "paid_amount": paid_amt, 
-    "balance": running_balance,  # ← RUNNING BALANCE
-    "date": today_date,
-}])
+    
+# 3. Supplier Ledger - Simple Balance
+                supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
+                
+                new_supp_entry = pd.DataFrame([{
+                    "id": len(supp_ledger_df) + 1,
+                    ...
+                    "balance": tot_amt - paid_amt,
+                    ...
+                    "supplier_name": sup_name, 
+                    "bill_no": "PUR-NEW",
+                    "total_amount": tot_amt, 
+                    "paid_amount": paid_amt, 
+                    "balance": tot_amt - paid_amt,
+                    "date": today_date
+                }])
+                
                 gc = get_gspread_client()
                 sh = gc.open(SHEET_NAME)
                 worksheet_supp = sh.worksheet("supplier_ledger")
