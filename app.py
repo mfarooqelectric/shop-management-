@@ -324,8 +324,8 @@ gc = get_gspread_client()
 sh = gc.open(SHEET_NAME)
 worksheet_supp = sh.worksheet("supplier_ledger")
                 
- if len(supp_ledger_df) == 0:
-     worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
+   if len(supp_ledger_df) == 0:
+      worksheet_supp.update([new_supp_entry.columns.tolist()] + new_supp_entry.values.tolist())
                 else:
                     worksheet_supp.append_rows(new_supp_entry.values.tolist())
 
