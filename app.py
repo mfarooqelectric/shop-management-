@@ -313,9 +313,7 @@ else:
                 
     new_supp_entry = pd.DataFrame([{
     "id": len(supp_ledger_df) + 1,
-    ...
     "balance": tot_amt - paid_amt,
-    ...
     "supplier_name": sup_name, 
     "bill_no": "PUR-NEW",
     "total_amount": tot_amt, 
