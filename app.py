@@ -302,7 +302,6 @@ supp_ledger_df = get_sheet_data("supplier_ledger", SUPP_LEDGER_COLS)
 
 # Same supplier ke previous balance dekho
 supplier_previous = supp_ledger_df[supp_ledger_df['supplier_name'] == sup_name]
-
 if not supplier_previous.empty:
     prev_balance = pd.to_numeric(supplier_previous.iloc[-1]['balance'], errors='coerce')
 else:
